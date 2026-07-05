@@ -1,0 +1,16 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+# node / next
+node_modules/
+.next/
+# secrets + runtime data
+.env
+backend/data/
+celerybeat-schedule*
+
+# model weights
+*.onnx
+*.pt
+*.pth

@@ -1,0 +1,106 @@
+# People Analytics stack (standalone repo). From the repo root:  cp .env.example .env && docker compose up
+# Build context is the repo root so the backend image can COPY the vendored ./platform.
+# `name: people-analytics` keeps containers/volumes (people-analytics-*) isolated. Host ports are
+# unique per scenario (assigned by tools/create-scenario) so many stacks coexist.
+name: people-analytics
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    restart: unless-stopped
+    env_file: .env
+    ports: ["5437:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["6384:6379"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 5 }
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    env_file: .env
+    ports: ["9010:9000", "9011:9001"]
+    volumes: ["rustfs_data:/data"]
+
+  maildev:
+    image: maildev/maildev:latest
+    restart: unless-stopped
+    ports: ["1030:1025", "1085:1080"]
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    ports: ["8650:8554", "8652:8889", "8651:8888", "8653:9997"]
+    volumes: ["./backend/mediamtx.yml:/mediamtx.yml"]
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    ports: ["6338:6333"]
+    volumes: ["qdrant_data:/qdrant/storage"]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      VE_QDRANT_URL: "http://qdrant:6333"
+      VE_MEDIAMTX_URL: "http://mediamtx:9997"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      qdrant: { condition: service_started }
+    ports: ["8005:8000"]
+    volumes:
+      - ./platform:/edge   # vendored edge source (hot reload)
+      - ./backend:/app        # editable backend source (hot reload)
+    command: >
+      bash -c "alembic upgrade head &&
+               uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  worker:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      VE_QDRANT_URL: "http://qdrant:6333"
+    depends_on:
+      redis: { condition: service_healthy }
+    volumes: ["./platform:/edge", "./backend:/app"]
+    command: celery -A edge.tasks.app.celery_app worker -l info
+
+  beat:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      redis: { condition: service_healthy }
+    volumes: ["./platform:/edge", "./backend:/app"]
+    command: celery -A edge.tasks.app.celery_app beat -l info
+
+  frontend:
+    build: { context: ./frontend, dockerfile: Dockerfile }
+    restart: unless-stopped
+    environment:
+      WATCHPACK_POLLING: "true"
+    ports: ["3005:3000"]
+    depends_on: [backend]
+    volumes:
+      - ./frontend:/app                 # editable frontend source (hot reload)
+      - ./platform/web:/app/web       # shared edge-ui (like /edge for backend)
+      - /app/node_modules                # keep the container's linux node_modules
+
+volumes:
+  pgdata:
+  rustfs_data:
+  qdrant_data:

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vizor-people-analytics-backend"
+version = "0.1.0"
+description = "Vizor People Analytics — scenario app on the edge boilerplate"
+requires-python = ">=3.11"
+
+# `edge` is the vendored boilerplate at ../platform — installed editable in the image.
+dependencies = [
+    "qdrant-client>=1.9",
+]
+
+[project.optional-dependencies]
+runtime = ["onnxruntime>=1.18", "numpy>=1.26", "opencv-python-headless>=4.9"]
+dev     = ["pytest>=8", "pytest-asyncio>=0.23", "aiosqlite>=0.20"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]

@@ -6,11 +6,12 @@ added to ``domain_routers()`` as they are built.
 """
 
 from ..domain import permissions as _perms  # noqa: F401 — registers perms on import
+from . import cameras
 
 
 def domain_routers():
     """Every people-analytics domain router, for create_base_app(extra_routers=...)."""
-    return []
+    return [cameras.router]
 
 
 __all__ = ["domain_routers"]

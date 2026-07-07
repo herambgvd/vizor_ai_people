@@ -13,7 +13,14 @@ from edge.core import ModuleRegistry
 
 def build_registry() -> ModuleRegistry:
     registry = ModuleRegistry()
-    # Feature modules will be registered here, e.g.:
-    #   from .modules import feature_a
-    #   registry.register(feature_a.SPEC)
+    # Each people-analytics scenario is a LICENSE-GATED feature module: its router
+    # (events + summary) mounts at /api/modules/<id> and its nav page appears ONLY
+    # when the client's license grants that module. Cameras / Live / Dashboard are
+    # core (always-on) and live in app.api.domain_routers() instead.
+    from .modules import counting, crowd, intrusion, loitering
+
+    registry.register(crowd.SPEC)
+    registry.register(counting.SPEC)
+    registry.register(loitering.SPEC)
+    registry.register(intrusion.SPEC)
     return registry

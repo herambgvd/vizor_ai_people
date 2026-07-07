@@ -153,13 +153,18 @@ async def delete_camera(
     )
 
 
-def _grab_frame(url: str, hw_accel: str) -> bytes | None:
-    """Pull a single frame from the RTSP url and return it JPEG-encoded (blocking)."""
+def _grab_frame(url: str) -> bytes | None:
+    """Pull a single frame from the RTSP url and return it JPEG-encoded (blocking).
+
+    ALWAYS uses CPU (software) decode — this runs in the API/backend container, which
+    has no GPU (only the streams worker does), so an nvdec grab here fails with
+    "no frame received". A one-shot reference-frame snapshot doesn't need NVDEC.
+    """
     import cv2  # local import — heavy runtime dep
 
     from edge.stream.rtsp import RTSPReader
 
-    reader = RTSPReader(url, fps=1, reconnect=False, hw_accel=hw_accel or "none")
+    reader = RTSPReader(url, fps=1, reconnect=False, hw_accel="none")
     try:
         for frame in reader.frames():
             ok, buf = cv2.imencode(".jpg", frame)
@@ -182,7 +187,7 @@ async def test_camera(
     if c is None:
         raise NotFoundError("camera not found")
     try:
-        frame = await run_in_threadpool(_grab_frame, c.rtsp_url, c.hw_accel)
+        frame = await run_in_threadpool(_grab_frame, c.rtsp_url)
     except Exception as exc:  # noqa: BLE001 — surface any decode/connect failure as status
         frame = None
         log.warning("camera test failed camera=%s err=%s", camera_id, exc)

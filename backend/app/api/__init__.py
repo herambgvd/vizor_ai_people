@@ -6,12 +6,17 @@ added to ``domain_routers()`` as they are built.
 """
 
 from ..domain import permissions as _perms  # noqa: F401 — registers perms on import
-from . import cameras
+from . import analytics, cameras, live
 
 
 def domain_routers():
-    """Every people-analytics domain router, for create_base_app(extra_routers=...)."""
-    return [cameras.router]
+    """CORE (always-on) people-analytics routers for create_base_app(extra_routers=...).
+
+    Cameras, the Live wall, and the Dashboard summary are always available. The four
+    scenario modules (crowd/counting/loitering/intrusion) are LICENSE-GATED instead —
+    registered in app.registry.build_registry() and mounted per the client's license.
+    """
+    return [cameras.router, live.router, analytics.router]
 
 
 __all__ = ["domain_routers"]

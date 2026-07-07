@@ -1,11 +1,21 @@
-// People Analytics portal top navigation. This is a dedicated single-scenario app; its
-// feature modules are the primary (flat, perm-gated) navigation alongside Dashboard
-// and Audit. Settings groups the common admin sub-pages.
-// Scenario UI lives in this app's own `views/` (NOT platform/web).
+// People Analytics portal top navigation. This is a dedicated multi-scenario app; its
+// LICENSED scenario modules are the primary navigation alongside Dashboard and Audit.
+// Settings groups the common admin sub-pages. Scenario UI lives in this app's own
+// `views/` (NOT platform/web).
+//
+// The four scenario entries carry `featureGated: <module id>`: Header keeps only the
+// ones present in GET /features (the licensed modules) — so a client licensed for a
+// single scenario sees only that page in the nav. Items WITHOUT `featureGated` are
+// unaffected (the flag is purely additive). The old unified "Events" page is gone —
+// each scenario now has its own page.
 export const menuItems = [
   { title: "Dashboard", icon: "heroicons-outline:home", link: "/" },
-  { title: "Home", icon: "heroicons-outline:squares-2x2", link: "/home", perm: "people-analytics.read" },
-  // Add this scenario's feature nav items here.
+  { title: "Cameras", icon: "heroicons-outline:video-camera", link: "/cameras", perm: "people-analytics.read" },
+  { title: "Live", icon: "heroicons-outline:signal", link: "/live", perm: "people-analytics.read" },
+  { title: "Crowd Counting", icon: "heroicons-outline:user-group", link: "/crowd", perm: "people-analytics.read", featureGated: "crowd" },
+  { title: "People Counting", icon: "heroicons-outline:arrows-right-left", link: "/counting", perm: "people-analytics.read", featureGated: "counting" },
+  { title: "Loitering", icon: "heroicons-outline:clock", link: "/loitering", perm: "people-analytics.read", featureGated: "loitering" },
+  { title: "Intrusion", icon: "heroicons-outline:shield-exclamation", link: "/intrusion", perm: "people-analytics.read", featureGated: "intrusion" },
   { title: "Audit", icon: "heroicons-outline:clipboard-document-list", link: "/audit", perm: "audit.read" },
   {
     title: "Settings",

@@ -232,7 +232,22 @@ export default function Header() {
   // Close it on navigation.
   useEffect(() => setOpenUser(false), [pathname]);
 
-  const items = menuItems.filter((m) => (m.link && !m.perm) || (m.perm && can(m.perm)) || m.children);
+  // Licensed scenario modules (GET /features → { modules:[{id,...}] }). A menu item
+  // may carry `featureGated: <module id>`; we keep it only when that module is in the
+  // license. Items WITHOUT `featureGated` are unaffected — this is purely additive, so
+  // apps whose menus don't use the flag behave exactly as before. Until /features
+  // resolves we hide gated items (avoids briefly flashing scenarios a client can't use).
+  const { data: featuresData } = useQuery({
+    queryKey: ["features"],
+    queryFn: () => api.get("/features").then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const licensedModules = featuresData ? new Set((featuresData.modules || []).map((m) => m.id)) : null;
+
+  const items = menuItems.filter((m) => {
+    if (m.featureGated && (!licensedModules || !licensedModules.has(m.featureGated))) return false;
+    return (m.link && !m.perm) || (m.perm && can(m.perm)) || m.children;
+  });
   const displayName = user?.full_name || user?.email;
 
   async function onPickAvatar(e) {

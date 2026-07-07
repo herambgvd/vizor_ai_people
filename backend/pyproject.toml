@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 # `edge` is the vendored boilerplate at ../platform — installed editable in the image.
 dependencies = [
     "qdrant-client>=1.9",
+    "tritonclient[http]>=2.40",   # shared-GPU Triton inference client (yolo26 person detector)
 ]
 
 [project.optional-dependencies]

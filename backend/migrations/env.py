@@ -21,6 +21,7 @@ import edge.core.audit  # noqa: F401
 import edge.messaging  # noqa: F401
 import edge.branding.models  # noqa: F401
 import edge.reports.models  # noqa: F401
+import edge.settings.models  # noqa: F401 — app_settings (platform settings store)
 import app.domain.models  # noqa: F401 — people-analytics tables (pa_cameras, pa_events)
 
 config = context.config

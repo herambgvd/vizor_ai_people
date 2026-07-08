@@ -8,7 +8,7 @@ import Providers from "@/web/Providers";
 
 export const metadata = {
   title: "Neubit",
-  description: "Neubit — face recognition platform",
+  description: "Neubit — people analytics platform",
 };
 
 // Set the theme class before first paint to avoid a flash (reads localStorage).

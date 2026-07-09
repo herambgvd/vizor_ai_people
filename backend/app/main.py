@@ -38,7 +38,7 @@ from .api import domain_routers  # noqa: E402 — after lifespan is defined
 
 app = create_base_app(
     build_registry(),
-    title="Neubit People Analytics",
+    title="wonin.ai People Analytics",
     extra_routers=domain_routers(),
     lifespan=lifespan,
 )

@@ -7,8 +7,8 @@ import { GeistSans } from "geist/font/sans";
 import Providers from "@/web/Providers";
 
 export const metadata = {
-  title: "Neubit",
-  description: "Neubit — people analytics platform",
+  title: "wonin.ai",
+  description: "wonin.ai — people analytics platform",
 };
 
 // Set the theme class before first paint to avoid a flash (reads localStorage).
